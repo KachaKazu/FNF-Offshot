@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Created with Funkin Packer v0.1.3 https://neeeoo.github.io/funkin-packer/
+-->
+<TextureAtlas imagePath="gfphony.png" width="222" height="235">
+	<SubTexture name="dance0000" x="0" y="118" width="111" height="117" frameX="-1" frameY="-2" frameWidth="113" frameHeight="119"/>
+	<SubTexture name="dance0001" x="0" y="0" width="111" height="118" frameX="-2" frameY="-1" frameWidth="113" frameHeight="119"/>
+	<SubTexture name="dance0002" x="111" y="0" width="111" height="118" frameX="-0" frameY="-0" frameWidth="113" frameHeight="119"/>
+	<SubTexture name="dance0003" x="111" y="0" width="111" height="118" frameX="-0" frameY="-0" frameWidth="113" frameHeight="119"/>
+</TextureAtlas>

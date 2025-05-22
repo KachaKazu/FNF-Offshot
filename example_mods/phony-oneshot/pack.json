@@ -1,0 +1,7 @@
+{
+	"name": "PHONY - ONESHOT",
+	"description": "real",
+	"restart": false,
+	"runsGlobally": false,
+	"color": [170, 0, 255]
+}

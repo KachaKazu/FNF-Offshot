@@ -1,0 +1,4 @@
+Modifies the Default camera zoom. wow....
+
+Value 1: Zoom value (default 0.9)
+Value 2: Tween time (on seconds)

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<TextureAtlas imagePath="missestxt.png">
+<SubTexture name="idle0000" x="0" y="0" width="226" height="56" frameX="-5" frameY="-5" frameWidth="224" frameHeight="50" />
+<SubTexture name="idle0001" x="0" y="112" width="224" height="55" frameX="-6" frameY="-5" frameWidth="224" frameHeight="50" />
+<SubTexture name="idle0002" x="0" y="56" width="226" height="56" frameX="-5" frameY="-5" frameWidth="224" frameHeight="50" />
+</TextureAtlas>

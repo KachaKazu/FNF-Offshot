@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<TextureAtlas imagePath="border.png">
+<SubTexture name="border border0000" x="0" y="0" width="74" height="372" frameX="-22" frameY="0" frameWidth="100" frameHeight="360" />
+<SubTexture name="border border0001" x="74" y="0" width="68" height="372" frameX="-22" frameY="0" frameWidth="100" frameHeight="360" />
+<SubTexture name="border border0002" x="142" y="0" width="74" height="372" frameX="-24" frameY="0" frameWidth="100" frameHeight="360" />
+</TextureAtlas>

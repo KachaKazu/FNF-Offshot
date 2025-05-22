@@ -1,0 +1,7 @@
+Phony - ONESHOT
+drawz::drawz::Director, Sprite and Icon Artist, Charter::https://x.com/masterbuilderw::007E60
+SawmanArtz::sawman::Background Artist::https://x.com/Sawmanartz::CF314D
+VoxerZTheBlue::voxers::Musician::https://youtube.com/channel/UCYfCo4XZceKyMwexQ5HmUTg::FFFFFF
+Dudu::dudu::Coder::https://x.com/dudugd20::484848
+scenophon::sceno::Coder::https://www.youtube.com/channel/UCBfekw8TcdPkYx-8Zy6VLKw::FFE798
+WaxyAir::waxyair::Voice Actor::https://x.com/WaxyAir::761A25

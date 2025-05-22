@@ -1,0 +1,32 @@
+{
+	"storyName": "Dominion",
+	"difficulties": "dominion, hurt",
+	"hideFreeplay": false,
+	"weekBackground": "",
+	"freeplayColor": [
+		73,
+		0,
+		255
+	],
+	"weekBefore": "tutorial",
+	"startUnlocked": true,
+	"weekCharacters": [
+		"",
+		"",
+		""
+	],
+	"songs": [
+		[
+			"Dominion",
+			"zalgo",
+			[
+				255,
+				0,
+				0
+			]
+		]
+	],
+	"hideStoryMode": true,
+	"weekName": "dominion",
+	"hiddenUntilUnlocked": false
+}

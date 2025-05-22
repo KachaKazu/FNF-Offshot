@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<TextureAtlas imagePath="tv-outline.png">
+<SubTexture name="idle0000" x="0" y="127" width="142" height="126" frameX="0" frameY="-1" frameWidth="130" frameHeight="115" />
+<SubTexture name="idle0001" x="0" y="0" width="141" height="127" frameX="-1" frameY="0" frameWidth="130" frameHeight="115" />
+<SubTexture name="idle0002" x="141" y="0" width="142" height="127" frameX="0" frameY="0" frameWidth="130" frameHeight="115" />
+<SubTexture name="idle0003" x="283" y="0" width="142" height="126" frameX="0" frameY="-1" frameWidth="130" frameHeight="115" />
+</TextureAtlas>
