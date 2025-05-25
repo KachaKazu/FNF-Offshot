@@ -4,7 +4,7 @@ local erm = false
 local startWindowShake = false
 local dafunny = false
 
---殺してやる…    破壊してやる
+--ぶっ壊して殺してやるよ！
 
 function onCreatePost()
 	makeLuaSprite('thing')
@@ -112,21 +112,12 @@ function onStepHit()
 	end
 
 	if curStep == 2695 then
-		setTextString('japanese', '殺してやる')
-		cancelTween('japanese')
-		setProperty('japanese.alpha', 1)
-	elseif curStep == 2710 then
-		doTweenAlpha('japanese', 'japanese', 0, 2)
-	end
-	
-	if curStep == 2728 then
-		setTextString('japanese', '破壊してやる')
+		setTextString('japanese', 'ぶっ壊して殺してやるよ！')
 		cancelTween('japanese')
 		setProperty('japanese.alpha', 1)
 	elseif curStep == 2743 then
 		doTweenAlpha('japanese', 'japanese', 0, 2)
 	end
-end
 
 function onTweenCompleted(t)
 	if t == 'mythingX' then erm = false end

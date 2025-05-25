@@ -5,55 +5,56 @@ import backend.Highscore;
 import backend.Song;
 
 import flixel.util.FlxStringUtil;
+import flixel.FlxSprite;
+import flixel.tweens.FlxTween;
+import flixel.util.FlxTimer;
+import flixel.input.keyboard.FlxKey;
 
 import states.StoryMenuState;
 import states.FreeplayState;
 import options.OptionsState;
 
+import flixel.addons.display.FlxBackdrop;
+
 class PauseSubState extends MusicBeatSubstate
 {
-	var grpMenuShit:FlxTypedGroup<Alphabet>;
-
 	var menuItems:Array<String> = [];
-	var menuItemsOG:Array<String> = ['Resume', 'Restart Song', 'Change Difficulty', 'Options', 'Exit to menu'];
-	var difficultyChoices = [];
+	var menuItemsOG:Array<String> = ['Resume', 'Restart Song', 'Options', 'Exit to menu'];
 	var curSelected:Int = 0;
 
 	var pauseMusic:FlxSound;
-	var practiceText:FlxText;
-	var skipTimeText:FlxText;
-	var skipTimeTracker:Alphabet;
-	var curTime:Float = Math.max(0, Conductor.songPosition);
 
 	var missingTextBG:FlxSprite;
 	var missingText:FlxText;
+
+	var checkerBackdrop:FlxBackdrop;
+
+	// Sprites para las opciones
+	var resumeSprite:FlxSprite;
+	var restartSprite:FlxSprite;
+	var optionsSprite:FlxSprite;
+	var exitSprite:FlxSprite;
+
+	// Sprite para el indicador
+	var arrowSprite:FlxSprite;
+
+	// Sprites para las canciones
+	var fakerSprite:FlxSprite;
+	var burialSprite:FlxSprite;
+	var dominionSprite:FlxSprite;
+
+	// Nuevo sprite para "benjamin"
+	var benjaminSprite:FlxSprite;
+
+	// Variable para rastrear las teclas ingresadas
+	var inputBuffer:String = "";
+	var targetSequence:String = "benjamin";
 
 	public static var songName:String = null;
 
 	override function create()
 	{
-		if(Difficulty.list.length < 2) menuItemsOG.remove('Change Difficulty'); //No need to change difficulty if there is only one!
-		if(PlayState.chartingMode)
-		{
-			menuItemsOG.insert(2, 'Leave Charting Mode');
-			var num:Int = 0;
-			if(!PlayState.instance.startingSong)
-			{
-				num = 1;
-				menuItemsOG.insert(3, 'Skip Time');
-			}
-			menuItemsOG.insert(3 + num, 'End Song');
-			menuItemsOG.insert(4 + num, 'Toggle Practice Mode');
-			menuItemsOG.insert(5 + num, 'Toggle Botplay');
-		} else if(PlayState.instance.practiceMode && !PlayState.instance.startingSong)
-			menuItemsOG.insert(3, 'Skip Time');
 		menuItems = menuItemsOG;
-
-		for (i in 0...Difficulty.list.length) {
-			var diff:String = Difficulty.getString(i);
-			difficultyChoices.push(diff);
-		}
-		difficultyChoices.push('BACK');
 
 		pauseMusic = new FlxSound();
 		try
@@ -67,6 +68,19 @@ class PauseSubState extends MusicBeatSubstate
 
 		FlxG.sound.list.add(pauseMusic);
 
+		// Crear el FlxBackdrop checker con transición
+		checkerBackdrop = new FlxBackdrop();
+		var checkerSize:Int = 64;
+		checkerBackdrop.loadGraphic(FlxG.bitmap.create(checkerSize * 2, checkerSize * 2, FlxColor.TRANSPARENT, true, "checkerPattern"), false);
+		checkerBackdrop.pixels.fillRect(new openfl.geom.Rectangle(0, 0, checkerSize, checkerSize), FlxColor.WHITE);
+		checkerBackdrop.pixels.fillRect(new openfl.geom.Rectangle(checkerSize, checkerSize, checkerSize, checkerSize), FlxColor.WHITE);
+		checkerBackdrop.alpha = 0;
+		checkerBackdrop.velocity.set(15, 15);
+		checkerBackdrop.scrollFactor.set();
+		add(checkerBackdrop);
+
+		FlxTween.tween(checkerBackdrop, {alpha: 0.5}, 0.6, {ease: FlxEase.quartInOut, startDelay: 0.1});
+
 		var bg:FlxSprite = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
 		bg.scale.set(FlxG.width, FlxG.height);
 		bg.updateHitbox();
@@ -74,56 +88,7 @@ class PauseSubState extends MusicBeatSubstate
 		bg.scrollFactor.set();
 		add(bg);
 
-		var levelInfo:FlxText = new FlxText(20, 15, 0, PlayState.SONG.song, 32);
-		levelInfo.scrollFactor.set();
-		levelInfo.setFormat(Paths.font("vcr.ttf"), 32);
-		levelInfo.updateHitbox();
-		add(levelInfo);
-
-		var levelDifficulty:FlxText = new FlxText(20, 15 + 32, 0, Difficulty.getString().toUpperCase(), 32);
-		levelDifficulty.scrollFactor.set();
-		levelDifficulty.setFormat(Paths.font('vcr.ttf'), 32);
-		levelDifficulty.updateHitbox();
-		add(levelDifficulty);
-
-		var blueballedTxt:FlxText = new FlxText(20, 15 + 64, 0, Language.getPhrase("blueballed", "Blueballed: {1}", [PlayState.deathCounter]), 32);
-		blueballedTxt.scrollFactor.set();
-		blueballedTxt.setFormat(Paths.font('vcr.ttf'), 32);
-		blueballedTxt.updateHitbox();
-		add(blueballedTxt);
-
-		practiceText = new FlxText(20, 15 + 101, 0, Language.getPhrase("Practice Mode").toUpperCase(), 32);
-		practiceText.scrollFactor.set();
-		practiceText.setFormat(Paths.font('vcr.ttf'), 32);
-		practiceText.x = FlxG.width - (practiceText.width + 20);
-		practiceText.updateHitbox();
-		practiceText.visible = PlayState.instance.practiceMode;
-		add(practiceText);
-
-		var chartingText:FlxText = new FlxText(20, 15 + 101, 0, Language.getPhrase("Charting Mode").toUpperCase(), 32);
-		chartingText.scrollFactor.set();
-		chartingText.setFormat(Paths.font('vcr.ttf'), 32);
-		chartingText.x = FlxG.width - (chartingText.width + 20);
-		chartingText.y = FlxG.height - (chartingText.height + 20);
-		chartingText.updateHitbox();
-		chartingText.visible = PlayState.chartingMode;
-		add(chartingText);
-
-		blueballedTxt.alpha = 0;
-		levelDifficulty.alpha = 0;
-		levelInfo.alpha = 0;
-
-		levelInfo.x = FlxG.width - (levelInfo.width + 20);
-		levelDifficulty.x = FlxG.width - (levelDifficulty.width + 20);
-		blueballedTxt.x = FlxG.width - (blueballedTxt.width + 20);
-
 		FlxTween.tween(bg, {alpha: 0.6}, 0.4, {ease: FlxEase.quartInOut});
-		FlxTween.tween(levelInfo, {alpha: 1, y: 20}, 0.4, {ease: FlxEase.quartInOut, startDelay: 0.3});
-		FlxTween.tween(levelDifficulty, {alpha: 1, y: levelDifficulty.y + 5}, 0.4, {ease: FlxEase.quartInOut, startDelay: 0.5});
-		FlxTween.tween(blueballedTxt, {alpha: 1, y: blueballedTxt.y + 5}, 0.4, {ease: FlxEase.quartInOut, startDelay: 0.7});
-
-		grpMenuShit = new FlxTypedGroup<Alphabet>();
-		add(grpMenuShit);
 
 		missingTextBG = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
 		missingTextBG.scale.set(FlxG.width, FlxG.height);
@@ -138,8 +103,126 @@ class PauseSubState extends MusicBeatSubstate
 		missingText.visible = false;
 		add(missingText);
 
+		// Determinar la canción actual
+		var currentSong:String = (songName != null ? songName : PlayState.SONG.song).toLowerCase();
+
+		// Cargar sprites de las opciones
+		resumeSprite = new FlxSprite(150, 0);
+		resumeSprite.loadGraphic(Paths.image('pause/resume'));
+		if (resumeSprite.graphic == null) trace("Error: No se pudo cargar pause/resume.png");
+		resumeSprite.scale.set(3.0, 3.0);
+		resumeSprite.scrollFactor.set();
+		resumeSprite.alpha = 0;
+		add(resumeSprite);
+
+		restartSprite = new FlxSprite(150, 0);
+		restartSprite.loadGraphic(Paths.image('pause/restart'));
+		if (restartSprite.graphic == null) trace("Error: No se pudo cargar pause/restart.png");
+		restartSprite.scale.set(3.0, 3.0);
+		restartSprite.scrollFactor.set();
+		restartSprite.alpha = 0;
+		add(restartSprite);
+
+		optionsSprite = new FlxSprite(150, 0);
+		optionsSprite.loadGraphic(Paths.image('pause/options'));
+		if (optionsSprite.graphic == null) trace("Error: No se pudo cargar pause/options.png");
+		optionsSprite.scale.set(3.0, 3.0);
+		optionsSprite.scrollFactor.set();
+		optionsSprite.alpha = 0;
+		add(optionsSprite);
+
+		exitSprite = new FlxSprite(150, 0);
+		exitSprite.loadGraphic(Paths.image('pause/exit'));
+		if (exitSprite.graphic == null) trace("Error: No se pudo cargar pause/exit.png");
+		exitSprite.scale.set(3.0, 3.0);
+		exitSprite.scrollFactor.set();
+		exitSprite.alpha = 0;
+		add(exitSprite);
+
+		// Posición inicial compartida para los sprites
+		var startX = FlxG.width;
+		var startY = FlxG.height * 0.35; // Un poquito más abajo (35% de la pantalla)
+
+		// Cargar sprite fakerRender para la canción "phony"
+		if (currentSong == "phony") {
+			fakerSprite = new FlxSprite(startX, startY);
+			fakerSprite.loadGraphic(Paths.image('pause/spritescharacter/faker/fakerRender'));
+			if (fakerSprite.graphic == null) trace("Error: No se pudo cargar pause/spritescharacter/faker/fakerRender.png");
+			fakerSprite.scale.set(2.0, 2.0);
+			fakerSprite.scrollFactor.set();
+			fakerSprite.alpha = 0;
+			add(fakerSprite);
+
+			var finalX = FlxG.width - (0.8 * fakerSprite.width * fakerSprite.scale.x);
+			var finalY = FlxG.height - (0.68 * fakerSprite.height * fakerSprite.scale.y);
+
+			FlxTween.tween(fakerSprite, {x: finalX, y: finalY, alpha: 1}, 0.6, {ease: FlxEase.quartInOut, startDelay: 0.1});
+		}
+
+		// Cargar sprite placeholder para "burial"
+		if (currentSong == "burial") {
+			burialSprite = new FlxSprite(startX, startY);
+			burialSprite.makeGraphic(100, 100, 0xFF000000); // Negro como base
+			burialSprite.pixels.fillRect(new openfl.geom.Rectangle(0, 0, 50, 100), 0xFFFF0000); // Rojo a la izquierda
+			burialSprite.scale.set(2.0, 2.0);
+			burialSprite.scrollFactor.set();
+			burialSprite.alpha = 0;
+			add(burialSprite);
+
+			var finalX = FlxG.width - (0.8 * burialSprite.width * burialSprite.scale.x);
+			var finalY = FlxG.height - (0.68 * burialSprite.height * burialSprite.scale.y);
+
+			FlxTween.tween(burialSprite, {x: finalX, y: finalY, alpha: 1}, 0.6, {ease: FlxEase.quartInOut, startDelay: 0.1});
+		}
+
+		// Cargar sprite placeholder para "dominion"
+		if (currentSong == "dominion") {
+			dominionSprite = new FlxSprite(startX, startY);
+			dominionSprite.makeGraphic(100, 100, 0xFF000000); // Negro como base
+			dominionSprite.pixels.fillRect(new openfl.geom.Rectangle(0, 0, 50, 100), 0xFFFF0000); // Rojo a la izquierda
+			dominionSprite.scale.set(2.0, 2.0);
+			dominionSprite.scrollFactor.set();
+			dominionSprite.alpha = 0;
+			add(dominionSprite);
+
+			var finalX = FlxG.width - (0.8 * dominionSprite.width * dominionSprite.scale.x);
+			var finalY = FlxG.height - (0.68 * dominionSprite.height * dominionSprite.scale.y);
+
+			FlxTween.tween(dominionSprite, {x: finalX, y: finalY, alpha: 1}, 0.6, {ease: FlxEase.quartInOut, startDelay: 0.1});
+		}
+
+		// Cargar sprite benjamin (inicialmente oculto)
+		benjaminSprite = new FlxSprite((FlxG.width - 200) / 2, (FlxG.height - 200) / 2); // Centrado
+		benjaminSprite.loadGraphic(Paths.image('pause/benjamin'));
+		if (benjaminSprite.graphic == null) trace("Error: No se pudo cargar pause/benjamin.png");
+		benjaminSprite.scale.set(1.0, 1.0);
+		benjaminSprite.scrollFactor.set();
+		benjaminSprite.alpha = 0;
+		add(benjaminSprite);
+
+		// Crear el sprite indicador "arrow"
+		arrowSprite = new FlxSprite(-100, 0);
+		arrowSprite.loadGraphic(Paths.image('pause/arrow'));
+		if (arrowSprite.graphic == null) trace("Error: No se pudo cargar pause/arrow.png");
+		arrowSprite.scale.set(2.3, 2.3);
+		arrowSprite.scrollFactor.set();
+		arrowSprite.alpha = 0;
+		add(arrowSprite);
+
 		regenMenu();
 		cameras = [FlxG.cameras.list[FlxG.cameras.list.length - 1]];
+
+		// Transiciones para los sprites de las opciones
+		FlxTween.tween(resumeSprite, {alpha: 1}, 0.6, {ease: FlxEase.quartInOut, startDelay: 0.1});
+		FlxTween.tween(restartSprite, {alpha: 1}, 0.6, {ease: FlxEase.quartInOut, startDelay: 0.2});
+		FlxTween.tween(optionsSprite, {alpha: 1}, 0.6, {ease: FlxEase.quartInOut, startDelay: 0.3});
+		FlxTween.tween(exitSprite, {alpha: 1}, 0.6, {ease: FlxEase.quartInOut, startDelay: 0.4});
+
+		// Transición para el arrow (entrada desde la izquierda)
+		FlxTween.tween(arrowSprite, {x: 60, alpha: 1}, 0.6, {ease: FlxEase.quartInOut, startDelay: 0.5, onComplete: function(tween:FlxTween) {
+			// Animación de subir y bajar (flotante) que se ejecuta continuamente
+			FlxTween.tween(arrowSprite, {y: arrowSprite.y + 10}, 1.0, {type: FlxTween.PINGPONG, ease: FlxEase.sineInOut});
+		}});
 
 		super.create();
 	}
@@ -161,6 +244,59 @@ class PauseSubState extends MusicBeatSubstate
 		if (pauseMusic.volume < 0.5)
 			pauseMusic.volume += 0.01 * elapsed;
 
+		// Detección de entrada de teclado para "benjamin"
+		var keyPressed = false;
+		var pressedKey:String = "";
+
+		if (FlxG.keys.justPressed.B) {
+			pressedKey = "b";
+			keyPressed = true;
+		}
+		else if (FlxG.keys.justPressed.E) {
+			pressedKey = "e";
+			keyPressed = true;
+		}
+		else if (FlxG.keys.justPressed.N) {
+			pressedKey = "n";
+			keyPressed = true;
+		}
+		else if (FlxG.keys.justPressed.J) {
+			pressedKey = "j";
+			keyPressed = true;
+		}
+		else if (FlxG.keys.justPressed.A) {
+			pressedKey = "a";
+			keyPressed = true;
+		}
+		else if (FlxG.keys.justPressed.M) {
+			pressedKey = "m";
+			keyPressed = true;
+		}
+		else if (FlxG.keys.justPressed.I) {
+			pressedKey = "i";
+			keyPressed = true;
+		}
+		else if (FlxG.keys.justPressed.N) {
+			pressedKey = "n";
+			keyPressed = true;
+		}
+
+		if (keyPressed) {
+			inputBuffer += pressedKey;
+			if (inputBuffer.length > targetSequence.length) {
+				inputBuffer = inputBuffer.substr(inputBuffer.length - targetSequence.length);
+			}
+			if (inputBuffer == targetSequence) {
+				benjaminSprite.alpha = 1; // Mostrar el sprite
+				new FlxTimer().start(3, function(timer:FlxTimer) {
+					FlxTween.tween(benjaminSprite, {alpha: 0}, 0.5, {ease: FlxEase.quartInOut});
+				});
+				inputBuffer = ""; // Restablecer el buffer
+			} else if (!targetSequence.startsWith(inputBuffer)) {
+				inputBuffer = ""; // Restablecer si la secuencia es incorrecta
+			}
+		}
+
 		super.update(elapsed);
 
 		if(controls.BACK)
@@ -177,7 +313,6 @@ class PauseSubState extends MusicBeatSubstate
 			MusicBeatState.resetState();
 		}
 
-		updateSkipTextStuff();
 		if (controls.UI_UP_P)
 		{
 			changeSelection(-1);
@@ -187,124 +322,17 @@ class PauseSubState extends MusicBeatSubstate
 			changeSelection(1);
 		}
 
-		var daSelected:String = menuItems[curSelected];
-		switch (daSelected)
-		{
-			case 'Skip Time':
-				if (controls.UI_LEFT_P)
-				{
-					FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
-					curTime -= 1000;
-					holdTime = 0;
-				}
-				if (controls.UI_RIGHT_P)
-				{
-					FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
-					curTime += 1000;
-					holdTime = 0;
-				}
-
-				if(controls.UI_LEFT || controls.UI_RIGHT)
-				{
-					holdTime += elapsed;
-					if(holdTime > 0.5)
-					{
-						curTime += 45000 * elapsed * (controls.UI_LEFT ? -1 : 1);
-					}
-
-					if(curTime >= FlxG.sound.music.length) curTime -= FlxG.sound.music.length;
-					else if(curTime < 0) curTime += FlxG.sound.music.length;
-					updateSkipTimeText();
-				}
-		}
-
 		if (controls.ACCEPT && (cantUnpause <= 0 || !controls.controllerMode))
 		{
-			if (menuItems == difficultyChoices)
-			{
-				var songLowercase:String = Paths.formatToSongPath(PlayState.SONG.song);
-				var poop:String = Highscore.formatSong(songLowercase, curSelected);
-				try
-				{
-					if(menuItems.length - 1 != curSelected && difficultyChoices.contains(daSelected))
-					{
-						Song.loadFromJson(poop, songLowercase);
-						PlayState.storyDifficulty = curSelected;
-						MusicBeatState.resetState();
-						FlxG.sound.music.volume = 0;
-						PlayState.changedDifficulty = true;
-						PlayState.chartingMode = false;
-						return;
-					}
-				}
-				catch(e:haxe.Exception)
-				{
-					trace('ERROR! ${e.message}');
-	
-					var errorStr:String = e.message;
-					if(errorStr.startsWith('[lime.utils.Assets] ERROR:')) errorStr = 'Missing file: ' + errorStr.substring(errorStr.indexOf(songLowercase), errorStr.length-1); //Missing chart
-					else errorStr += '\n\n' + e.stack;
-
-					missingText.text = 'ERROR WHILE LOADING CHART:\n$errorStr';
-					missingText.screenCenter(Y);
-					missingText.visible = true;
-					missingTextBG.visible = true;
-					FlxG.sound.play(Paths.sound('cancelMenu'));
-
-					super.update(elapsed);
-					return;
-				}
-
-
-				menuItems = menuItemsOG;
-				regenMenu();
-			}
-
+			var daSelected:String = menuItems[curSelected];
 			switch (daSelected)
 			{
 				case "Resume":
 					close();
-				case 'Change Difficulty':
-					menuItems = difficultyChoices;
-					deleteSkipTimeText();
-					regenMenu();
-				case 'Toggle Practice Mode':
-					PlayState.instance.practiceMode = !PlayState.instance.practiceMode;
-					PlayState.changedDifficulty = true;
-					practiceText.visible = PlayState.instance.practiceMode;
 				case "Restart Song":
 					restartSong();
-				case "Leave Charting Mode":
-					restartSong();
-					PlayState.chartingMode = false;
-				case 'Skip Time':
-					if(curTime < Conductor.songPosition)
-					{
-						PlayState.startOnTime = curTime;
-						restartSong(true);
-					}
-					else
-					{
-						if (curTime != Conductor.songPosition)
-						{
-							PlayState.instance.clearNotesBefore(curTime);
-							PlayState.instance.setSongTime(curTime);
-						}
-						close();
-					}
-				case 'End Song':
-					close();
-					PlayState.instance.notes.clear();
-					PlayState.instance.unspawnNotes = [];
-					PlayState.instance.finishSong(true);
-				case 'Toggle Botplay':
-					PlayState.instance.cpuControlled = !PlayState.instance.cpuControlled;
-					PlayState.changedDifficulty = true;
-					PlayState.instance.botplayTxt.visible = PlayState.instance.cpuControlled;
-					PlayState.instance.botplayTxt.alpha = 1;
-					PlayState.instance.botplaySine = 0;
 				case 'Options':
-					PlayState.instance.paused = true; // For lua
+					PlayState.instance.paused = true;
 					PlayState.instance.vocals.volume = 0;
 					PlayState.instance.canResync = false;
 					MusicBeatState.switchState(new OptionsState());
@@ -328,28 +356,14 @@ class PauseSubState extends MusicBeatSubstate
 						MusicBeatState.switchState(new FreeplayState());
 
 					FlxG.sound.playMusic(Paths.music('freakyMenu'));
-					PlayState.changedDifficulty = false;
-					PlayState.chartingMode = false;
 					FlxG.camera.followLerp = 0;
 			}
 		}
 	}
 
-	function deleteSkipTimeText()
-	{
-		if(skipTimeText != null)
-		{
-			skipTimeText.kill();
-			remove(skipTimeText);
-			skipTimeText.destroy();
-		}
-		skipTimeText = null;
-		skipTimeTracker = null;
-	}
-
 	public static function restartSong(noTrans:Bool = false)
 	{
-		PlayState.instance.paused = true; // For lua
+		PlayState.instance.paused = true;
 		FlxG.sound.music.volume = 0;
 		PlayState.instance.vocals.volume = 0;
 
@@ -364,72 +378,57 @@ class PauseSubState extends MusicBeatSubstate
 	override function destroy()
 	{
 		pauseMusic.destroy();
+		if(checkerBackdrop != null) checkerBackdrop.destroy();
+		if(resumeSprite != null) resumeSprite.destroy();
+		if(restartSprite != null) restartSprite.destroy();
+		if(optionsSprite != null) optionsSprite.destroy();
+		if(exitSprite != null) exitSprite.destroy();
+		if(arrowSprite != null) arrowSprite.destroy();
+		if(fakerSprite != null) fakerSprite.destroy();
+		if(burialSprite != null) burialSprite.destroy();
+		if(dominionSprite != null) dominionSprite.destroy();
+		if(benjaminSprite != null) benjaminSprite.destroy();
 		super.destroy();
 	}
 
 	function changeSelection(change:Int = 0):Void
 	{
 		curSelected = FlxMath.wrap(curSelected + change, 0, menuItems.length - 1);
-		for (num => item in grpMenuShit.members)
-		{
-			item.targetY = num - curSelected;
-			item.alpha = 0.6;
-			if (item.targetY == 0)
-			{
-				item.alpha = 1;
-				if(item == skipTimeTracker)
-				{
-					curTime = Math.max(0, Conductor.songPosition);
-					updateSkipTimeText();
-				}
-			}
-		}
+		resumeSprite.alpha = (curSelected == 0) ? 1 : 0.6;
+		restartSprite.alpha = (curSelected == 1) ? 1 : 0.6;
+		optionsSprite.alpha = (curSelected == 2) ? 1 : 0.6;
+		exitSprite.alpha = (curSelected == 3) ? 1 : 0.6;
+
+		// Calcular la posición base del arrow
+		var baseY:Float = resumeSprite.y + (curSelected * 120);
+
+		// Cancelar animaciones previas solo del movimiento vertical
+		FlxTween.cancelTweensOf(arrowSprite, ['y']);
+
+		// Animar el movimiento vertical del arrow hacia la nueva posición de forma fluida
+		FlxTween.tween(arrowSprite, {y: baseY}, 0.3, {ease: FlxEase.quartInOut});
+
 		missingText.visible = false;
 		missingTextBG.visible = false;
 		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
 	}
 
 	function regenMenu():Void {
-		for (i in 0...grpMenuShit.members.length)
-		{
-			var obj:Alphabet = grpMenuShit.members[0];
-			obj.kill();
-			grpMenuShit.remove(obj, true);
-			obj.destroy();
-		}
+		// Calcular la altura total del menú para centrarlo verticalmente
+		var itemHeight:Float = 120;
+		var totalHeight:Float = itemHeight * menuItems.length;
+		var startY:Float = (FlxG.height - totalHeight) / 2;
 
-		for (num => str in menuItems) {
-			var item = new Alphabet(90, 320, Language.getPhrase('pause_$str', str), true);
-			item.isMenuItem = true;
-			item.targetY = num;
-			grpMenuShit.add(item);
+		// Posicionar los sprites
+		resumeSprite.y = startY;
+		restartSprite.y = startY + (1 * itemHeight);
+		optionsSprite.y = startY + (2 * itemHeight);
+		exitSprite.y = startY + (3 * itemHeight);
 
-			if(str == 'Skip Time')
-			{
-				skipTimeText = new FlxText(0, 0, 0, '', 64);
-				skipTimeText.setFormat(Paths.font("vcr.ttf"), 64, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-				skipTimeText.scrollFactor.set();
-				skipTimeText.borderSize = 2;
-				skipTimeTracker = item;
-				add(skipTimeText);
+		// Posicionar el arrow inicialmente
+		arrowSprite.y = resumeSprite.y;
 
-				updateSkipTextStuff();
-				updateSkipTimeText();
-			}
-		}
 		curSelected = 0;
 		changeSelection();
 	}
-	
-	function updateSkipTextStuff()
-	{
-		if(skipTimeText == null || skipTimeTracker == null) return;
-
-		skipTimeText.x = skipTimeTracker.x + skipTimeTracker.width + 60;
-		skipTimeText.y = skipTimeTracker.y;
-		skipTimeText.visible = (skipTimeTracker.alpha >= 1);
-	}
-
-	function updateSkipTimeText()
-		skipTimeText.text = FlxStringUtil.formatTime(Math.max(0, Math.floor(curTime / 1000)), false) + ' / ' + FlxStringUtil.formatTime(Math.max(0, Math.floor(FlxG.sound.music.length / 1000)), false);
 }
